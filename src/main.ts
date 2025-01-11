@@ -1,8 +1,9 @@
 import { CPU } from "./core/cpu";
+import { Keyboard } from "./core/keyboard";
 import { Memory } from "./core/memory";
 import { Register } from "./core/register";
 import { Screen } from "./core/screen";
-import { opcodeTest } from "./roms";
+import { quirksRom } from "./roms";
 import "./style.css";
 
 const canvas = document.createElement("canvas");
@@ -12,12 +13,14 @@ if (!ctx) throw new Error("Canvas not supported");
 
 document.getElementById("app")?.appendChild(canvas);
 
-
 const memory = new Memory();
 const register = new Register();
 const screen = new Screen(ctx, 10);
-const cpu = new CPU({ memory, register, screen });
-cpu.load(opcodeTest);
+const keyboard = new Keyboard();
+keyboard.init();
+
+const cpu = new CPU({ memory, register, screen, keyboard });
+cpu.load(quirksRom);
 cpu.run();
 
 screen.draw();

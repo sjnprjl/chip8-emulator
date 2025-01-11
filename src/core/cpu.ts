@@ -3,25 +3,31 @@ import { Memory } from "./memory";
 import { Register } from "./register";
 import { toU16 } from "./utils";
 import { Screen } from "./screen";
+import { Keyboard } from "./keyboard";
 
 export class CPU {
   public register: Register;
   public memory: Memory;
   public screen: Screen;
+  public keyboard: Keyboard;
   private intervalId: number;
+
   constructor({
     register,
     memory,
     screen,
+    keyboard,
   }: {
     register: Register;
     memory: Memory;
     screen: Screen;
+    keyboard: Keyboard;
   }) {
     this.register = register;
     this.memory = memory;
     this.screen = screen;
     this.intervalId = 0;
+    this.keyboard = keyboard;
   }
 
   load(arr: Uint8Array) {
@@ -50,7 +56,12 @@ export class CPU {
       clearInterval(this.intervalId);
       throw new Error("Invalid opcode " + opcode.toString(16) + ` at ${pc}`);
     }
-    instr(this, opcode);
+    try {
+      instr(this, opcode);
+    } catch (err) {
+      clearInterval(this.intervalId);
+      throw err;
+    }
   }
 
   run() {

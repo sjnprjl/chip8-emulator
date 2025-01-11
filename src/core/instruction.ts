@@ -157,12 +157,40 @@ export const Instruction = {
     }
     cpu.screen.draw();
   },
+  0xe: (cpu: CPU, opcode: number) => {
+    const nn = opcode & 0xff;
+    const x = (opcode & 0x0f00) >> 8;
+    switch (nn) {
+      case 0x9e: {
+        // SKP Vx
+        const vx = cpu.register.getRegister(x);
+        const currentKey = cpu.keyboard.getCurrentKeyDown();
+        if (currentKey && currentKey === vx) {
+          cpu.register.pc += 2;
+        }
+        return;
+      }
+      case 0xa1: {
+        const vx = cpu.register.getRegister(x);
+        const currentKey = cpu.keyboard.getCurrentKeyDown();
+        if (currentKey && currentKey !== vx) {
+          cpu.register.pc += 2;
+        }
+        return;
+      }
+    }
+  },
   0xf: (cpu: CPU, opcode: number) => {
     const x = (opcode & 0x0f00) >> 8;
 
     const kk = opcode & 0xff;
+    const vx = cpu.register.getRegister(x);
 
     switch (kk) {
+      case 0x15: {
+        cpu.register.delayRegister = vx;
+        return;
+      }
       case 0x1e: {
         cpu.register.I += cpu.register.getRegister(x);
         return;
@@ -190,6 +218,9 @@ export const Instruction = {
           cpu.register.setRegister(i, data);
         }
         return;
+      }
+      default: {
+        throw new Error("Opcode not implemented " + opcode.toString(16));
       }
     }
   },
