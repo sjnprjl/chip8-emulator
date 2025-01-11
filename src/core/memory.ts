@@ -19,6 +19,9 @@ const FONTS = Uint8Array.from([
 
 export class Memory {
   private _mem = new Uint8Array(0xfff);
+  /**16 bit stack pointer */
+  private SP: number = 0;
+  private stack: Uint16Array = new Uint16Array(0x10);
 
   constructor() {
     this._mem.set(FONTS);
@@ -27,11 +30,20 @@ export class Memory {
   read(addr: number) {
     return this._mem[addr & 0xfff];
   }
-  write(addr: number) {
-    this._mem[addr & 0xfff] = 0;
+  write(addr: number, value: number) {
+    this._mem[addr & 0xfff] = value;
   }
 
   load(arr: Uint8Array, offset?: number) {
     this._mem.set(arr, offset);
+  }
+
+  pushToStack(value: number) {
+    this.stack[this.SP] = value;
+    this.SP++;
+  }
+  popStack() {
+    this.SP--;
+    return this.stack[this.SP];
   }
 }

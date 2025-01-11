@@ -42,10 +42,14 @@ export class CPU {
   }
 
   private tick() {
+    const pc = this.register.pc;
     const opcode = this.fetch();
     const instr = this.decode(opcode);
-    console.log(`Opcode: ${opcode.toString(16).padStart(4, "0")}`);
-    if (!instr) throw new Error("Invalid opcode " + opcode.toString(16));
+    console.log("opcode " + opcode.toString(16) + ` at ${pc}`);
+    if (!instr) {
+      clearInterval(this.intervalId);
+      throw new Error("Invalid opcode " + opcode.toString(16) + ` at ${pc}`);
+    }
     instr(this, opcode);
   }
 

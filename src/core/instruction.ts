@@ -1,31 +1,25 @@
 import { CPU } from "./cpu";
-import { getNthBit, toU16 } from "./utils";
+import { getNthBit } from "./utils";
 
 export const Instruction = {
   0: (cpu: CPU, opcode: number) => {
     switch (opcode) {
       case 0x0000: {
-        console.log("0x0000");
         return;
       }
       case 0x00e0: {
         // clear the display;
         cpu.screen.reset();
-        console.log("clear display");
         return;
       }
       case 0x00ee: {
-        const c = cpu.memory.read(cpu.register.sp--);
-        const p = cpu.memory.read(cpu.register.sp--);
-        const pc = toU16(p, c);
+        const pc = cpu.memory.popStack();
         cpu.register.pc = pc;
-        console.log("0x00ee");
         return;
       }
       default: {
         const nnn = opcode & 0x0fff;
         cpu.register.pc = nnn;
-        console.log("0x0nnn", nnn);
       }
     }
   },
@@ -36,6 +30,7 @@ export const Instruction = {
   },
   2: (cpu: CPU, opcode: number) => {
     const nnn = opcode & 0x0fff;
+    cpu.memory.pushToStack(cpu.register.pc);
     cpu.register.pc = nnn;
     return;
   },
@@ -66,14 +61,78 @@ export const Instruction = {
   6: (cpu: CPU, opcode: number) => {
     const kk = opcode & 0xff;
     const x = (opcode & 0x0f00) >> 8;
-    console.log("6", x, kk);
     cpu.register.setRegister(x, kk);
   },
   7: (cpu: CPU, opcode: number) => {
-    const x = (opcode & 0x10) >> 4;
+    const x = (opcode & 0x0f00) >> 8;
     const kk = opcode & 0xff;
     const vx = cpu.register.getRegister(x) + kk;
     cpu.register.setRegister(x, vx);
+  },
+  8: (cpu: CPU, opcode: number) => {
+    const lastBit = opcode & 0xf;
+
+    const x = (opcode & 0x0f00) >> 8;
+    const y = (opcode & 0x00f0) >> 4;
+
+    const vx = cpu.register.getRegister(x);
+    const vy = cpu.register.getRegister(y);
+
+    switch (lastBit) {
+      case 0: {
+        cpu.register.setRegister(x, vy);
+        return;
+      }
+      case 1: {
+        cpu.register.setRegister(x, vx | vy);
+        return;
+      }
+      case 2: {
+        cpu.register.setRegister(x, vx & vy);
+        return;
+      }
+      case 3: {
+        cpu.register.setRegister(x, vx ^ vy);
+        return;
+      }
+      case 4: {
+        if (vx + vy > 255) cpu.register.setRegister(0xf, 1);
+        else cpu.register.setRegister(0xf, 0);
+        cpu.register.setRegister(x, vx + vy);
+        return;
+      }
+      case 5: {
+        if (vx > vy) cpu.register.setRegister(0xf, 1);
+        else cpu.register.setRegister(0xf, 0);
+        cpu.register.setRegister(x, vx - vy);
+        return;
+      }
+      case 6: {
+        const lsb = vx & 1;
+        cpu.register.setRegister(0xf, lsb);
+        cpu.register.setRegister(x, vx >> 1);
+        return;
+      }
+      case 7: {
+        if (vy > vx) cpu.register.setRegister(0xf, 1);
+        else cpu.register.setRegister(0xf, 0);
+        cpu.register.setRegister(x, vy - vx);
+        return;
+      }
+      case 0xe: {
+        const lsb = vx >> 7;
+        cpu.register.setRegister(0xf, lsb);
+        cpu.register.setRegister(x, vx << 1);
+        return;
+      }
+    }
+  },
+  9: (cpu: CPU, opcode: number) => {
+    const x = (opcode & 0x0f00) >> 8;
+    const y = (opcode & 0xf0) >> 4;
+    const vx = cpu.register.getRegister(x);
+    const vy = cpu.register.getRegister(y);
+    if (vx !== vy) cpu.register.pc += 2;
   },
   0xa: (cpu: CPU, opcode: number) => {
     const nnn = 0x0fff & opcode;
@@ -87,13 +146,51 @@ export const Instruction = {
     const vx = cpu.register.getRegister(x);
     const vy = cpu.register.getRegister(y);
 
-    // const sprite = cpu.memory.read(cpu.register.I, n);
     for (let i = 0; i < n; i++) {
       const sprite = cpu.memory.read(cpu.register.I + i);
       for (let j = 0; j < 8; j++) {
-        cpu.screen.setPixel(vx + j, vy + i, getNthBit(sprite, 7 - j));
+        const xored =
+          getNthBit(sprite, 7 - j) ^ cpu.screen.getPixel(vx + j, vy + i);
+        cpu.register.setRegister(0xf, Number(!xored));
+        cpu.screen.setPixel(vx + j, vy + i, xored);
       }
     }
     cpu.screen.draw();
+  },
+  0xf: (cpu: CPU, opcode: number) => {
+    const x = (opcode & 0x0f00) >> 8;
+
+    const kk = opcode & 0xff;
+
+    switch (kk) {
+      case 0x1e: {
+        cpu.register.I += cpu.register.getRegister(x);
+        return;
+      }
+      case 0x33: {
+        const data = cpu.register.getRegister(x);
+        const ones = data % 10;
+        const tens = ((data - ones) % 100) / 10;
+        const hundreds = (data - ones - tens * 10) / 100;
+        cpu.memory.write(cpu.register.I + 0, hundreds);
+        cpu.memory.write(cpu.register.I + 1, tens);
+        cpu.memory.write(cpu.register.I + 2, ones);
+        return;
+      }
+      case 0x55: {
+        for (let i = 0; i <= x; i++) {
+          const data = cpu.register.getRegister(i);
+          cpu.memory.write(cpu.register.I + i, data);
+        }
+        return;
+      }
+      case 0x65: {
+        for (let i = 0; i <= x; i++) {
+          const data = cpu.memory.read(cpu.register.I + i);
+          cpu.register.setRegister(i, data);
+        }
+        return;
+      }
+    }
   },
 } as const;

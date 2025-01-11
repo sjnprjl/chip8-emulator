@@ -9,8 +9,6 @@ export class Register {
 
   /**16 bit program counter */
   private PC: number = 0;
-  /**16 bit stack pointer */
-  private SP: number = 0;
   constructor() {}
 
   setRegister(index: number, value: number) {
@@ -25,14 +23,6 @@ export class Register {
   }
   set pc(value: number) {
     this.PC = value;
-  }
-
-  get sp() {
-    return this.SP;
-  }
-
-  set sp(value: number) {
-    this.SP = value;
   }
 
   get delayRegister() {
