@@ -1,5 +1,5 @@
 import { CPU } from "./cpu";
-import { getNthBit } from "./utils";
+import { getNthBit, signed } from "./utils";
 
 export const Instruction = {
   0: (cpu: CPU, opcode: number) => {
@@ -96,33 +96,33 @@ export const Instruction = {
         return;
       }
       case 4: {
+        cpu.register.setRegister(x, vx + vy);
         if (vx + vy > 255) cpu.register.setRegister(0xf, 1);
         else cpu.register.setRegister(0xf, 0);
-        cpu.register.setRegister(x, vx + vy);
         return;
       }
       case 5: {
-        if (vx > vy) cpu.register.setRegister(0xf, 1);
-        else cpu.register.setRegister(0xf, 0);
         cpu.register.setRegister(x, vx - vy);
+        if (vx >= vy) cpu.register.setRegister(0xf, 1);
+        else cpu.register.setRegister(0xf, 0);
         return;
       }
       case 6: {
         const lsb = vx & 1;
-        cpu.register.setRegister(0xf, lsb);
         cpu.register.setRegister(x, vx >> 1);
+        cpu.register.setRegister(0xf, lsb);
         return;
       }
       case 7: {
-        if (vy > vx) cpu.register.setRegister(0xf, 1);
-        else cpu.register.setRegister(0xf, 0);
         cpu.register.setRegister(x, vy - vx);
+        if (vy >= vx) cpu.register.setRegister(0xf, 1);
+        else cpu.register.setRegister(0xf, 0);
         return;
       }
       case 0xe: {
         const lsb = vx >> 7;
-        cpu.register.setRegister(0xf, lsb);
         cpu.register.setRegister(x, vx << 1);
+        cpu.register.setRegister(0xf, lsb);
         return;
       }
     }

@@ -9,3 +9,6 @@ export function splitU16(val: number) {
 export function getNthBit(val: number, n: number) {
   return (val >> n) & 1;
 }
+export function signed(u: number) {
+  return u & 0x80 ? u - 256 : u;
+}
