@@ -78,4 +78,11 @@ export class Screen {
   setFg(color: string) {
     this._color.fg = color;
   }
+
+  getWidth() {
+    return this._w;
+  }
+  getHeight() {
+    return this._h;
+  }
 }

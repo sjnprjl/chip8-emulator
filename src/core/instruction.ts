@@ -143,23 +143,38 @@ export const Instruction = {
   },
   0xb: (cpu: CPU, opcode: number) => {
     const nnn = 0x0fff & opcode;
-    cpu.register.pc = nnn + cpu.register.getRegister(0);
+    cpu.register.pc = nnn + cpu.register.getRegister(nnn >> 8);
+  },
+  0xc: (cpu: CPU, opcode: number) => {
+    const x = (opcode & 0x0f00) >> 8;
+    const kk = opcode & 0xff;
+    const rnd = Math.floor(Math.random() * 255);
+    cpu.register.setRegister(x, rnd & kk);
   },
   0xd: (cpu: CPU, opcode: number) => {
     // draw
     const x = (opcode & 0x0f00) >> 8;
     const y = (opcode & 0x00f0) >> 4;
     const n = opcode & 0x000f;
-    const vx = cpu.register.getRegister(x);
-    const vy = cpu.register.getRegister(y);
+    const vx = cpu.register.getRegister(x) % cpu.screen.getWidth();
+    const vy = cpu.register.getRegister(y) % cpu.screen.getHeight();
 
+    cpu.register.setRegister(0xf, 0);
     for (let i = 0; i < n; i++) {
       const sprite = cpu.memory.read(cpu.register.I + i);
       for (let j = 0; j < 8; j++) {
-        const xored =
-          getNthBit(sprite, 7 - j) ^ cpu.screen.getPixel(vx + j, vy + i);
-        cpu.register.setRegister(0xf, Number(!xored));
-        cpu.screen.setPixel(vx + j, vy + i, xored);
+        if (vx + j >= cpu.screen.getWidth() || vy + i >= cpu.screen.getHeight())
+          continue;
+        const currentPixel = cpu.screen.getPixel(vx + j, vy + i);
+        const spritePixel = getNthBit(sprite, 7 - j);
+        if (currentPixel && spritePixel) {
+          cpu.register.setRegister(0xf, 1);
+        }
+        cpu.screen.setPixel(
+          vx + j,
+          vy + i,
+          currentPixel ^ spritePixel ? 1 : 0
+        );
       }
     }
   },
@@ -201,6 +216,13 @@ export const Instruction = {
       }
       case 0x15: {
         cpu.register.delayTimer = vx;
+        return;
+      }
+      case 0x18: {
+        cpu.register.soundTimer = vx;
+      }
+      case 0x29: {
+        cpu.register.I = vx * 5;
         return;
       }
       case 0x1e: {
