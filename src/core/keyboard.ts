@@ -1,24 +1,30 @@
 export class Keyboard {
-  private currentKeyDown: number | null = null;
+  private keyMaps = new Uint8Array(0x10);
+  public onPress?: (event: "keyup" | "keydown", n: number) => void;
   constructor() {}
 
-  private listen(event: "keyup" | "keydown", cb: (n: number) => void) {
+  public listen() {
+    this.onKeypress("keydown", (n) => {
+      this.keyMaps[n] = 1;
+      if (this.onPress) this.onPress("keydown", n);
+    });
+    this.onKeypress("keyup", (n) => {
+      this.keyMaps[n] = 0;
+      if (this.onPress) this.onPress("keyup", n);
+    });
+  }
+
+  private onKeypress(event: "keyup" | "keydown", cb: (n: number) => void) {
+    if (event !== "keyup" && event !== "keydown")
+      throw new Error("Invalid event");
     addEventListener(event, (e) => {
       const pressed = parseInt(e.key, 16);
       if (!Number.isNaN(pressed)) cb(pressed);
     });
   }
 
-  init() {
-    this.listen("keydown", (n) => {
-      this.currentKeyDown = n;
-    });
-    this.listen("keyup", (_) => {
-      this.currentKeyDown = null;
-    });
-  }
-
-  getCurrentKeyDown() {
-    return this.currentKeyDown;
+  isKeyPressed(n: number) {
+    if (n < 0 || n > 0xf) throw new Error("Invalid key");
+    return this.keyMaps[n];
   }
 }

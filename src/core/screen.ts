@@ -34,11 +34,19 @@ export class Screen {
     );
   }
   draw() {
-    this.context.fillStyle = this._color.fg;
     for (let y = 0; y < this._h; y++) {
       for (let x = 0; x < this._w; x++) {
         if (this.getPixel(x, y)) {
-          this.context.rect(
+          this.context.fillStyle = this._color.fg;
+          this.context.fillRect(
+            x * this._scale,
+            y * this._scale,
+            this._scale,
+            this._scale
+          );
+        } else {
+          this.context.fillStyle = this._color.bg;
+          this.context.fillRect(
             x * this._scale,
             y * this._scale,
             this._scale,
@@ -48,6 +56,20 @@ export class Screen {
       }
     }
     this.context.fill();
+  }
+
+  clear() {
+    this.context.fillStyle = this._color.bg;
+    this.context.fillRect(
+      0,
+      0,
+      this.context.canvas.width,
+      this.context.canvas.height
+    );
+  }
+
+  render() {
+    this.draw();
   }
 
   setBg(color: string) {

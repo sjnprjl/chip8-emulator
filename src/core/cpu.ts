@@ -11,6 +11,9 @@ export class CPU {
   public screen: Screen;
   public keyboard: Keyboard;
   private intervalId: number;
+  private waitForKeyPressed: boolean = false;
+  private IR: number = 0;
+  public debug = false;
 
   constructor({
     register,
@@ -30,6 +33,17 @@ export class CPU {
     this.keyboard = keyboard;
   }
 
+  private setKeyboardInterrupt() {
+    this.keyboard.onPress = (event, key) => {
+      if (this.waitForKeyPressed && key && event === "keyup") {
+        const x = (this.IR & 0x0f00) >> 8;
+        this.register.setRegister(x, key);
+        this.waitForKeys(false);
+      }
+    };
+    this.keyboard.listen();
+  }
+
   load(arr: Uint8Array) {
     this.register.pc = 0x200;
     this.memory.load(arr, this.register.pc);
@@ -38,20 +52,31 @@ export class CPU {
   private fetch() {
     const msb = this.memory.read(this.register.pc++);
     const lsb = this.memory.read(this.register.pc++);
-    return toU16(msb, lsb);
+    this.IR = toU16(msb, lsb);
+    return this.IR;
   }
 
   private decode(opcode: number) {
-    const first = ((opcode & 0xf000) >> 12) as keyof typeof Instruction;
-    const instr = Instruction[first];
+    // most significant bit
+    const msb = ((opcode & 0xf000) >> 12) as keyof typeof Instruction;
+    const instr = Instruction[msb];
     return instr;
+  }
+
+  private checkInterrupts(): boolean {
+    return this.waitForKeyPressed;
   }
 
   private tick() {
     const pc = this.register.pc;
+
+    if (this.checkInterrupts()) {
+      return;
+    }
+
     const opcode = this.fetch();
     const instr = this.decode(opcode);
-    console.log("opcode " + opcode.toString(16) + ` at ${pc}`);
+    if (this.debug) console.log("opcode " + opcode.toString(16) + ` at ${pc}`);
     if (!instr) {
       clearInterval(this.intervalId);
       throw new Error("Invalid opcode " + opcode.toString(16) + ` at ${pc}`);
@@ -65,8 +90,19 @@ export class CPU {
   }
 
   run() {
+    this.setKeyboardInterrupt();
     this.intervalId = setInterval(() => {
-      this.tick();
+      this.screen.clear();
+      if (this.register.delayTimer > 0) this.register.delayTimer--;
+      if (this.register.soundTimer > 0) this.register.soundTimer--;
+      for (let i = 0; i < 29368; i++) {
+        this.tick();
+      }
+      this.screen.render();
     }, 1000 / 60);
+  }
+
+  waitForKeys(wait = true) {
+    this.waitForKeyPressed = wait;
   }
 }

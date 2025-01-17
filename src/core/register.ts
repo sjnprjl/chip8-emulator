@@ -2,8 +2,8 @@ export class Register {
   /** General Purpose registers */
   private registers = new Uint8Array(0x10);
   /**Special Registers */
-  private _delayRegister: number = 0;
-  private _timerRegister: number = 0;
+  private _delayTimer: number = 0;
+  private _soundTimer: number = 0;
 
   public I: number = 0;
 
@@ -25,18 +25,18 @@ export class Register {
     this.PC = value;
   }
 
-  get delayRegister() {
-    return this._delayRegister & 0xf;
+  get delayTimer() {
+    return this._delayTimer & 0xf;
   }
-  set delayRegister(v: number) {
-    this._delayRegister = v & 0xf;
-  }
-
-  get timerRegister() {
-    return this._timerRegister & 0xf;
+  set delayTimer(v: number) {
+    this._delayTimer = v & 0xf;
   }
 
-  set timerRegister(v: number) {
-    this._timerRegister = v & 0xf;
+  get soundTimer() {
+    return this._soundTimer & 0xf;
+  }
+
+  set soundTimer(v: number) {
+    this._soundTimer = v & 0xf;
   }
 }

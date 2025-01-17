@@ -3,7 +3,7 @@ import { Keyboard } from "./core/keyboard";
 import { Memory } from "./core/memory";
 import { Register } from "./core/register";
 import { Screen } from "./core/screen";
-import { quirksRom } from "./roms";
+import { keypadTest, quirksRom } from "./roms";
 import "./style.css";
 
 const canvas = document.createElement("canvas");
@@ -17,7 +17,6 @@ const memory = new Memory();
 const register = new Register();
 const screen = new Screen(ctx, 10);
 const keyboard = new Keyboard();
-keyboard.init();
 
 const cpu = new CPU({ memory, register, screen, keyboard });
 cpu.load(quirksRom);

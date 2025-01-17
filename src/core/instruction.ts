@@ -1,5 +1,5 @@
 import { CPU } from "./cpu";
-import { getNthBit, signed } from "./utils";
+import { getNthBit } from "./utils";
 
 export const Instruction = {
   0: (cpu: CPU, opcode: number) => {
@@ -85,14 +85,17 @@ export const Instruction = {
       }
       case 1: {
         cpu.register.setRegister(x, vx | vy);
+        cpu.register.setRegister(0xf, 0);
         return;
       }
       case 2: {
         cpu.register.setRegister(x, vx & vy);
+        cpu.register.setRegister(0xf, 0);
         return;
       }
       case 3: {
         cpu.register.setRegister(x, vx ^ vy);
+        cpu.register.setRegister(0xf, 0);
         return;
       }
       case 4: {
@@ -138,6 +141,10 @@ export const Instruction = {
     const nnn = 0x0fff & opcode;
     cpu.register.I = nnn;
   },
+  0xb: (cpu: CPU, opcode: number) => {
+    const nnn = 0x0fff & opcode;
+    cpu.register.pc = nnn + cpu.register.getRegister(0);
+  },
   0xd: (cpu: CPU, opcode: number) => {
     // draw
     const x = (opcode & 0x0f00) >> 8;
@@ -155,7 +162,6 @@ export const Instruction = {
         cpu.screen.setPixel(vx + j, vy + i, xored);
       }
     }
-    cpu.screen.draw();
   },
   0xe: (cpu: CPU, opcode: number) => {
     const nn = opcode & 0xff;
@@ -164,18 +170,15 @@ export const Instruction = {
       case 0x9e: {
         // SKP Vx
         const vx = cpu.register.getRegister(x);
-        const currentKey = cpu.keyboard.getCurrentKeyDown();
-        if (currentKey && currentKey === vx) {
-          cpu.register.pc += 2;
-        }
+        const currentKey = cpu.keyboard.isKeyPressed(vx);
+
+        if (currentKey) cpu.register.pc += 2;
         return;
       }
       case 0xa1: {
         const vx = cpu.register.getRegister(x);
-        const currentKey = cpu.keyboard.getCurrentKeyDown();
-        if (currentKey && currentKey !== vx) {
-          cpu.register.pc += 2;
-        }
+        const currentKey = cpu.keyboard.isKeyPressed(vx);
+        if (!currentKey) cpu.register.pc += 2;
         return;
       }
     }
@@ -187,8 +190,17 @@ export const Instruction = {
     const vx = cpu.register.getRegister(x);
 
     switch (kk) {
+      case 0x07: {
+        cpu.register.setRegister(x, cpu.register.delayTimer);
+        return;
+      }
+
+      case 0x0a: {
+        cpu.waitForKeys();
+        break;
+      }
       case 0x15: {
-        cpu.register.delayRegister = vx;
+        cpu.register.delayTimer = vx;
         return;
       }
       case 0x1e: {
