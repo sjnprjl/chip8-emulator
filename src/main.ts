@@ -4,7 +4,7 @@ import { Memory } from "./core/memory";
 import { Register } from "./core/register";
 import { Screen } from "./core/screen";
 import { Sound } from "./core/sound";
-import { airplane, beepTest, keypadTest, pong, quirksRom, spaceFlight, tetris } from "./roms";
+import { getRom } from "./roms";
 import "./style.css";
 
 const canvas = document.createElement("canvas");
@@ -21,7 +21,7 @@ const keyboard = new Keyboard();
 const sound = new Sound();
 
 const cpu = new CPU({ memory, register, screen, keyboard, sound });
-cpu.load(beepTest);
+cpu.load(getRom("space flight"));
 cpu.run();
 
 screen.draw();
