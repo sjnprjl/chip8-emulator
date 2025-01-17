@@ -173,7 +173,7 @@ export const Instruction = {
         cpu.screen.setPixel(
           vx + j,
           vy + i,
-          currentPixel ^ spritePixel ? 1 : 0
+          currentPixel ^ spritePixel,
         );
       }
     }

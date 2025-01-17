@@ -18,10 +18,9 @@ export class Sound {
 
   stop() {
     if (!this.isPlaying) return;
-    if(this.oscillator){
-    this.oscillator.stop();
-    this.oscillator.disconnect();
-
+    if (this.oscillator) {
+      this.oscillator.stop();
+      this.oscillator.disconnect();
     }
     this.isPlaying = false;
   }

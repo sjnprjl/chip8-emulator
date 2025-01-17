@@ -1,3 +1,5 @@
+import { hexStr } from "./utils";
+
 export class Register {
   /** General Purpose registers */
   private registers = new Uint8Array(0x10);
@@ -38,5 +40,38 @@ export class Register {
 
   set soundTimer(v: number) {
     this._soundTimer = v & 0xf;
+  }
+  public reset() {
+    this.I = 0;
+    this.PC = 0x200;
+    this.soundTimer = 0;
+    this.delayTimer = 0;
+    this.registers.fill(0);
+  }
+
+  public dump() {
+    const str = `
+I: ${this.I}
+PC: ${this.PC}
+Delay Timer: ${hexStr(this.delayTimer)}
+Sound Timer: ${hexStr(this.soundTimer)}
+V0: ${hexStr(this.registers[0])}
+V1: ${hexStr(this.registers[1])}
+V2: ${hexStr(this.registers[2])}
+V3: ${hexStr(this.registers[3])}
+V4: ${hexStr(this.registers[4])}
+V5: ${hexStr(this.registers[5])}
+V6: ${hexStr(this.registers[6])}
+V7: ${hexStr(this.registers[7])}
+V8: ${hexStr(this.registers[8])}
+V9: ${hexStr(this.registers[9])}
+VA: ${hexStr(this.registers[10])}
+VB: ${hexStr(this.registers[11])}
+VC: ${hexStr(this.registers[12])}
+VD: ${hexStr(this.registers[13])}
+VE: ${hexStr(this.registers[14])}
+VF: ${hexStr(this.registers[15])}
+    `;
+    return str;
   }
 }

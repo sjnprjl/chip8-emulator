@@ -1,27 +1,11 @@
-import { CPU } from "./core/cpu";
-import { Keyboard } from "./core/keyboard";
-import { Memory } from "./core/memory";
-import { Register } from "./core/register";
-import { Screen } from "./core/screen";
-import { Sound } from "./core/sound";
+import { Chip8 } from "./core/chip8";
 import { getRom } from "./roms";
 import "./style.css";
 
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
+const chip8 = new Chip8({
+  app: document.getElementById("app") as HTMLElement,
+});
 
-if (!ctx) throw new Error("Canvas not supported");
+chip8.loadRom(getRom("opcode test"));
 
-document.getElementById("app")?.appendChild(canvas);
-
-const memory = new Memory();
-const register = new Register();
-const screen = new Screen(ctx, 10);
-const keyboard = new Keyboard();
-const sound = new Sound();
-
-const cpu = new CPU({ memory, register, screen, keyboard, sound });
-cpu.load(getRom("space flight"));
-cpu.run();
-
-screen.draw();
+chip8.init();

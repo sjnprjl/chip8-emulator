@@ -12,3 +12,7 @@ export function getNthBit(val: number, n: number) {
 export function signed(u: number) {
   return u & 0x80 ? u - 256 : u;
 }
+
+export function hexStr(val: number) {
+  return val.toString(16).padStart(2, "0");
+}

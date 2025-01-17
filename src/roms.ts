@@ -686,6 +686,10 @@ const roms = {
   flags: flags,
 } as const;
 
+export const getRoms = () => roms;
+
+export const getRomNames = () => Object.keys(roms) as Array<keyof typeof roms>;
+
 export const getRom = (name: keyof typeof roms) => {
   if (roms[name]) return roms[name];
   else throw new Error(`Rom ${name} not found`);

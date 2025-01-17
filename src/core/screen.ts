@@ -36,16 +36,15 @@ export class Screen {
   draw() {
     for (let y = 0; y < this._h; y++) {
       for (let x = 0; x < this._w; x++) {
+        this.context.fillStyle = this._color.bg;
+        this.context.fillRect(
+          x * this._scale,
+          y * this._scale,
+          this._scale,
+          this._scale
+        );
         if (this.getPixel(x, y)) {
           this.context.fillStyle = this._color.fg;
-          this.context.fillRect(
-            x * this._scale,
-            y * this._scale,
-            this._scale,
-            this._scale
-          );
-        } else {
-          this.context.fillStyle = this._color.bg;
           this.context.fillRect(
             x * this._scale,
             y * this._scale,

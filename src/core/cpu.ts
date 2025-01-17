@@ -16,6 +16,7 @@ export class CPU {
   private waitForKeyPressed: boolean = false;
   private IR: number = 0;
   public debug = false;
+  private _pause: boolean = false;
 
   constructor({
     register,
@@ -49,6 +50,24 @@ export class CPU {
     this.keyboard.listen();
   }
 
+  public pause() {
+    this._pause = true;
+  }
+
+  public resume() {
+    this._pause = false;
+  }
+
+  public isRunning() {
+    return !this._pause;
+  }
+
+  public reset() {
+    this.sound.stop();
+    this.register.reset();
+    this.screen.reset();
+  }
+
   load(arr: Uint8Array) {
     this.register.pc = 0x200;
     this.memory.load(arr, this.register.pc);
@@ -74,11 +93,9 @@ export class CPU {
 
   private tick() {
     const pc = this.register.pc;
-
     if (this.checkInterrupts()) {
       return;
     }
-
     const opcode = this.fetch();
     const instr = this.decode(opcode);
     if (this.debug) console.log("opcode " + opcode.toString(16) + ` at ${pc}`);
@@ -94,7 +111,7 @@ export class CPU {
     }
   }
 
-  private cycle() {
+  public step() {
     if (this.register.delayTimer > 0) {
       this.register.delayTimer--;
     }
@@ -104,16 +121,33 @@ export class CPU {
     } else {
       this.sound.stop();
     }
-    for (let i = 0; i < 10; i++) {
-      this.tick();
-    }
+    this.tick();
     this.screen.render();
-    window.requestAnimationFrame(this.cycle.bind(this));
   }
 
-  run() {
+  private cycle(cb?: () => void) {
+    if (!this._pause) {
+      if (this.register.delayTimer > 0) {
+        this.register.delayTimer--;
+      }
+      if (this.register.soundTimer > 0) {
+        this.sound.play();
+        this.register.soundTimer--;
+      } else {
+        this.sound.stop();
+      }
+      for (let i = 0; i < 10; i++) {
+        this.tick();
+      }
+    }
+    this.screen.render();
+    cb?.();
+    window.requestAnimationFrame(() => this.cycle(cb));
+  }
+
+  run(cb?: () => void) {
     this.setKeyboardInterrupt();
-    this.cycle();
+    this.cycle(cb);
   }
 
   waitForKeys(wait = true) {
