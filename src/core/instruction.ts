@@ -220,6 +220,7 @@ export const Instruction = {
       }
       case 0x18: {
         cpu.register.soundTimer = vx;
+        return;
       }
       case 0x29: {
         cpu.register.I = vx * 5;
@@ -259,3 +260,5 @@ export const Instruction = {
     }
   },
 } as const;
+
+

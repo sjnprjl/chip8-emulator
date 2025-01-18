@@ -4,7 +4,7 @@ import { Memory } from "./memory";
 import { Register } from "./register";
 import { Sound } from "./sound";
 import { Screen } from "./screen";
-import { getRom, getRomNames, getRoms } from "../roms";
+import { getRom, getRoms } from "../roms";
 
 interface Chip8Options {
   debug?: boolean;
@@ -29,6 +29,8 @@ export class Chip8 {
     const memory = new Memory();
     const register = new Register();
     const screen = new Screen(ctx, this.options.scale);
+    screen.setBg("#08090A");
+    screen.setFg("#F4FAFF");
     const keyboard = new Keyboard();
     const sound = new Sound();
 
